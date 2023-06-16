@@ -9,19 +9,28 @@ vpc.create_tags(Tags=[{'Key': 'Name', 'Value': 'DCGPlayroom'}])
 vpc.wait_until_available()
 print("VPC created:", vpc.id)
 
+
 #Create a subnet within the VPC
 public_subnet = ec2_resource.create_subnet(CidrBlock='10.0.1.0/24', VpcId=vpc.id)
 public_subnet.create_tags(Tags=[{'Key': 'Name', 'Value': 'Public_subnet'}])
 print("Subnet created:", public_subnet.id)
 
+
 private_subnet = ec2_resource.create_subnet(CidrBlock='10.0.2.0/24', VpcId=vpc.id)
 private_subnet.create_tags(Tags=[{'Key': 'Name', 'Value': 'Private_subnet'}])
 print("Subnet created:", private_subnet.id)
 
+
 #Create an Internet Gateway
-internet_gateway = ec2_resource.create_internet_gateway(
-    
-)
+internet_gateway = ec2_resource.create_internet_gateway()
+print("Internet Gateway created:", internet_gateway.id)
+
+# Attach the Internet gateway to the VPC
+vpc_id = vpc.id
+vpc = ec2_resource.Vpc(vpc.id)
+vpc.attach_internet_gateway(InternetGatewayId=internet_gateway.id)
+print("Internet Gateway attached to VPC:", vpc.id)
+
 
 # Create a security group
 public_security_group = ec2_resource.create_security_group(
@@ -37,6 +46,7 @@ public_security_group.authorize_ingress(
 )
 print("Security group created:", public_security_group.id)
 
+
 private_security_group = ec2_resource.create_security_group(
     GroupName='MySecurityGroup',
     Description='Allow ssh and http',
@@ -49,6 +59,7 @@ private_security_group.authorize_ingress(
     ]
 )
 print("Security group created:", private_security_group.id)
+
 
 # Launch two ec2Instance, each in both subnets
 public_ec2_instance = ec2_resource.create_instance(
@@ -72,6 +83,7 @@ private_ec2_instance = ec2_resource.create_instance(
 )[0]
 private_ec2_instance.wait_until_running()
 print("EC2 instance created:", private_ec2_instance.id)
+
 
 # Create an s3 client
 s3 = boto3.client('s3')
